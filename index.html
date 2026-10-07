@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlowQA — QA from the ticket to the evidence, inside VS Code</title>
+<meta name="description" content="FlowQA is an end-to-end quality framework for GitHub Copilot Chat in VS Code: guided journeys take a user story from analysis to automated tests, quality gates and results published back to Jira or Azure DevOps.">
+<link rel="canonical" href="https://avilelaqa.github.io/flowqa/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="FlowQA">
+<meta property="og:title" content="FlowQA — QA inside VS Code">
+<meta property="og:description" content="FlowQA is an end-to-end quality framework for GitHub Copilot Chat in VS Code: guided journeys take a user story from analysis to automated tests, quality gates and results published back to Jira or Azure DevOps.">
+<meta property="og:url" content="https://avilelaqa.github.io/flowqa/">
+<meta property="og:image" content="https://avilelaqa.github.io/flowqa/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0e0d0b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23d9a441'/%3E%3Cpath d='M18 34l10 10 18-22' fill='none' stroke='%230e0d0b' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+color-scheme: dark;
+--ink-0: #0e0d0b;   /* page */
+--ink-1: #16140f;   /* panel */
+--ink-2: #1f1c15;   /* raised */
+--line: #2d2819;
+--fg: #f2ede4;
+--fg-2: #b3ab9b;
+--fg-3: #7d7566;
+--gold: #d9a441;
+--gold-2: #f0c66a;
+--gold-dim: #6e5320;
+--good: #7fc786;
+--display: "Bricolage Grotesque", "Archivo", "Segoe UI", system-ui, sans-serif;
+--body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+--mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+--measure: 62ch;
+--gutter: clamp(16px, 4vw, 48px);
+--radius: 10px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+body {
+margin: 0; background: var(--ink-0); color: var(--fg);
+font-family: var(--body); font-size: 17px; line-height: 1.55;
+-webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--gold-2); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--fg); }
+:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.08; letter-spacing: -0.015em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.3rem, 6vw, 4.4rem); font-weight: 800; }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.6rem); font-weight: 700; }
+h3 { font-size: 1.2rem; font-weight: 700; letter-spacing: 0; }
+p { margin: 0; }
+.eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+.muted { color: var(--fg-2); }
+.mono { font-family: var(--mono); }
+code, .cmd { font-family: var(--mono); font-size: 0.92em; }
+code { background: var(--ink-2); border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.4em; color: var(--gold-2); }
+.wrap { max-width: 1180px; margin-inline: auto; padding-inline: var(--gutter); }
+section { padding-block: clamp(56px, 9vw, 112px); border-top: 1px solid var(--line); }
+section:first-of-type { border-top: 0; }
+.lead { max-width: var(--measure); font-size: 1.15rem; color: var(--fg-2); margin-top: 18px; }
+.section-head { display: grid; gap: 14px; max-width: 760px; }
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--ink-0) 82%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--fg); white-space: nowrap; }
+.wordmark { font-family: var(--display); font-weight: 800; letter-spacing: 0.04em; color: var(--gold); font-size: 1.25rem; display: inline-flex; align-items: center; gap: 6px; }
+.wordmark .tick { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--gold); color: var(--ink-0); font-size: 12px; font-weight: 900; }
+.by { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; color: var(--fg-3); text-transform: uppercase; }
+.nav-links { display: flex; gap: 22px; align-items: center; }
+.nav-links a { color: var(--fg-2); text-decoration: none; font-size: 0.95rem; }
+.nav-links a:hover { color: var(--fg); }
+.nav-links a.btn-gold, .nav-links a.btn-gold:hover { color: var(--ink-0); }
+@media (max-width: 760px) { .nav-links a:not(.btn) { display: none; } }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 600; text-decoration: none; font-size: 0.98rem; border: 1px solid transparent; cursor: pointer; font-family: var(--body); line-height: 1; }
+.btn-gold { background: var(--gold); color: var(--ink-0); }
+.btn-gold:hover { background: var(--gold-2); color: var(--ink-0); }
+.btn-ghost { border-color: var(--line); color: var(--fg); background: transparent; }
+.btn-ghost:hover { border-color: var(--gold-dim); color: var(--fg); }
+.nav .btn { padding: 9px 16px; font-size: 0.9rem; }
+.hero { padding-block: clamp(56px, 10vw, 120px) clamp(48px, 7vw, 88px); }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(32px, 5vw, 72px); align-items: center; }
+@media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+.hero .eyebrow { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 22px; }
+.hero h1 em { font-style: normal; color: var(--gold); }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.terminal { background: var(--ink-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: 0 30px 80px -40px rgba(0,0,0,0.8); }
+.terminal-bar { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.terminal-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-2); border: 1px solid var(--line); display: inline-block; }
+.terminal-body { padding: 18px 20px 22px; font-family: var(--mono); font-size: 0.9rem; line-height: 1.7; color: var(--fg-2); }
+.terminal-body .line { display: block; white-space: pre-wrap; }
+.terminal-body .p { color: var(--gold); }
+.terminal-body .ok { color: var(--good); }
+.terminal-body .dim { color: var(--fg-3); }
+.caret { display: inline-block; width: 8px; height: 1em; background: var(--gold); vertical-align: -0.15em; margin-left: 2px; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (max-width: 480px) { .terminal-body { font-size: 0.78rem; padding: 14px 14px 18px; } }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: clamp(40px, 6vw, 64px); }
+@media (max-width: 760px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fact { background: var(--ink-1); padding: 18px 20px; display: grid; gap: 4px; }
+.fact b { font-family: var(--display); font-size: 1.9rem; font-weight: 700; color: var(--gold-2); font-variant-numeric: tabular-nums; line-height: 1; }
+.fact span { color: var(--fg-2); font-size: 0.95rem; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.card { background: var(--ink-1); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 22px 24px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.card h3 { font-size: 1.1rem; }
+.card p { color: var(--fg-2); }
+.so-what { margin-top: 28px; max-width: var(--measure); font-size: 1.15rem; }
+.so-what b { color: var(--gold-2); }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 44px; position: relative; }
+.flow::before { content: ""; position: absolute; left: 6%; right: 6%; top: 34px; height: 2px; background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim)); }
+.stage { position: relative; padding: 0 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.stage .dot { width: 70px; height: 70px; border-radius: 50%; background: var(--ink-1); border: 2px solid var(--gold); display: grid; place-items: center; font-family: var(--display); font-weight: 800; color: var(--gold-2); font-size: 1.1rem; position: relative; z-index: 1; }
+.stage h3 { margin-top: 6px; }
+.stage p { color: var(--fg-2); font-size: 0.98rem; }
+.stage .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--mono); font-size: 0.72rem; color: var(--fg-2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; background: var(--ink-1); }
+@media (max-width: 860px) {
+.flow { grid-template-columns: 1fr; gap: 28px; padding-left: 8px; }
+.flow::before { left: 42px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; background: linear-gradient(180deg, var(--gold-dim), var(--gold), var(--gold-dim)); }
+.stage { grid-template-columns: 70px minmax(0, 1fr); column-gap: 18px; padding: 0; }
+.stage .dot { grid-row: 1 / span 4; }
+}
+.split { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+--x: 0; }
+.split.journeys-split { grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr); gap: clamp(28px, 5vw, 64px); align-items: start; margin-top: 40px; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+.steps { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.steps li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+.steps li::before { counter-increment: step; content: counter(step, decimal-leading-zero); font-family: var(--mono); color: var(--gold); font-size: 0.8rem; padding-top: 4px; }
+.steps b { display: block; }
+.steps span { color: var(--fg-2); }
+.shots { display: grid; gap: 14px; }
+.shots.two { grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (max-width: 600px) { .shots.two { grid-template-columns: 1fr; } }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure img { border-radius: 8px; border: 1px solid var(--line); background: var(--ink-1); }
+figcaption { font-size: 0.85rem; color: var(--fg-3); font-family: var(--mono); }
+.outcomes { display: grid; gap: 10px; margin: 28px 0 0; padding: 0; list-style: none; }
+.outcomes li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; color: var(--fg-2); }
+.outcomes li::before { content: "✓"; color: var(--good); font-weight: 700; }
+.journeys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+@media (max-width: 600px) { .journeys { grid-template-columns: 1fr; } }
+.journey { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; background: var(--ink-1); min-width: 0; }
+.journey .top { display: grid; gap: 3px; }
+.journey b { font-size: 1rem; }
+.journey .n { font-family: var(--mono); font-size: 0.75rem; color: var(--gold); white-space: nowrap; }
+.journey p { color: var(--fg-2); font-size: 0.93rem; }
+.journey.more { border-style: dashed; background: transparent; }
+.journey.more p { color: var(--fg-3); }
+.arch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+@media (max-width: 860px) { .arch { grid-template-columns: 1fr; } }
+.arch .card .eyebrow { font-size: 0.7rem; }
+.req { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--fg-2); font-size: 0.95rem; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 64px); align-items: center; margin-top: 36px; }
+@media (max-width: 860px) { .field { grid-template-columns: 1fr; } }
+.big { font-family: var(--display); font-size: clamp(3.5rem, 9vw, 6rem); font-weight: 800; color: var(--gold); line-height: 0.95; letter-spacing: -0.02em; }
+.quote { border-left: 2px solid var(--gold-dim); padding-left: 18px; color: var(--fg-2); font-size: 1.05rem; }
+.access { background: var(--ink-1); }
+.form-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 64px); margin-top: 8px; align-items: start; }
+@media (max-width: 900px) { .form-grid { grid-template-columns: 1fr; } }
+form { display: grid; gap: 14px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+label { display: grid; gap: 6px; font-size: 0.9rem; color: var(--fg-2); }
+input, select, textarea { width: 100%; font: inherit; font-size: 1rem; color: var(--fg); background: var(--ink-0); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; }
+input:focus, select:focus, textarea:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 25%, transparent); }
+textarea { min-height: 96px; resize: vertical; }
+.form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.note { font-size: 0.85rem; color: var(--fg-3); }
+.status { border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; background: var(--ink-0); display: grid; gap: 10px; }
+.status[data-kind="ok"] { border-color: var(--good); }
+.status[data-kind="err"] { border-color: #d07a5a; }
+.status pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 0.82rem; color: var(--fg-2); max-height: 220px; overflow: auto; }
+.copyline { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.copyline code { font-size: 0.95rem; }
+.copybtn { font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.copybtn:hover { border-color: var(--gold-dim); }
+.creator { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 32px; }
+@media (max-width: 600px) { .creator { grid-template-columns: 1fr; } }
+.avatar { width: 96px; height: 96px; border-radius: 50%; background: var(--ink-2); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--display); font-weight: 800; color: var(--gold); font-size: 1.6rem; }
+.links { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; }
+.vsc { font-family: "Inter", "Segoe UI", system-ui, sans-serif; font-size: 13px; color: #cccccc; background: #222222; border: 1px solid #454545; border-radius: 6px; overflow: hidden; width: 100%; max-width: 100%; }
+.vsc .qp-title { text-align: center; padding: 7px 10px 5px; color: #cccccc; }
+.vsc .qp-input { margin: 4px 8px 6px; background: #313131; border: 1px solid #0078d4; border-radius: 3px; padding: 4px 7px; color: #989898; min-height: 18px; }
+.vsc .qp-list { padding: 0 0 4px; }
+.vsc .qp-item { padding: 4px 10px; line-height: 18px; display: grid; gap: 1px; }
+.vsc .qp-item.sel { background: #2a78b5; color: #ffffff; }
+.vsc .qp-item .n { color: #9d9d9d; margin-left: 10px; font-size: 12px; }
+.vsc .qp-item.sel .n { color: #e6f0fa; }
+.vsc .qp-item .d { color: #9d9d9d; }
+.vsc .qp-item.sel .d { color: #ffffff; }
+.vsc.journey-pick .qp-item { padding: 6px 12px; }
+.vsc.chat { background: #181818; border-color: #2b2b2b; border-radius: 8px; padding: 16px 18px 18px; font-size: 13.5px; line-height: 1.5; }
+.vsc.chat p { margin: 0 0 10px; }
+.vsc.chat b { color: #e6e6e6; font-weight: 600; }
+.vsc.chat code { font-family: var(--mono); font-size: 11.5px; background: #2b2b2b; border: 0; border-radius: 4px; padding: 2px 6px; color: #d4d4d4; }
+.vsc.chat hr { border: 0; border-top: 1px solid #3a3a3a; margin: 12px 0; }
+.vsc.chat h4 { margin: 0 0 8px; font-size: 16px; font-weight: 600; color: #e6e6e6; font-family: inherit; letter-spacing: 0; }
+.vsc.chat .bubble { display: flex; justify-content: flex-end; margin: 18px 0 14px; }
+.vsc.chat .bubble span { background: #2a2d2e; border-radius: 8px; padding: 7px 10px; }
+.vsc.chat .tok { color: #4daafc; background: #1f3a55; border-radius: 4px; padding: 1px 5px; }
+.vsc.chat .who { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #e6e6e6; margin-bottom: 8px; }
+.vsc.chat .who i { width: 20px; height: 20px; border-radius: 50%; background: #2b2b2b; display: inline-grid; place-items: center; font-style: normal; font-size: 12px; }
+.vsc.chat .tool { background: #202020; border-left: 3px solid #3a3a3a; padding: 5px 10px; margin-bottom: 8px; }
+.vsc.chat .ev { color: #9d9d9d; }
+@media (max-width: 480px) { .vsc { font-size: 12px; } .vsc.chat { font-size: 12.5px; padding: 12px; } }
+footer { border-top: 1px solid var(--line); padding-block: 28px 40px; color: var(--fg-3); font-size: 0.9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center; }
+</style>
+<header class="nav">
+<div class="wrap">
+<a class="brand" href="#top" aria-label="FlowQA home">
+<span class="wordmark">FLOWQA <span class="tick" aria-hidden="true">✓</span></span>
+<span class="by">by TMPS</span>
+</a>
+<nav class="nav-links" aria-label="Sections">
+<a href="#how">How it works</a>
+<a href="#setup">Setup</a>
+<a href="#journeys">Journeys</a>
+<a href="#architecture">Architecture</a>
+<a class="btn btn-gold" href="#access">Early access</a>
+</nav>
+</div>
+</header>
+<main id="top">
+<section class="hero">
+<div class="wrap">
+<div class="hero-grid">
+<div>
+<div class="eyebrow">
+<span>VS Code extension</span><span aria-hidden="true">·</span>
+<span>GitHub Copilot Chat</span><span aria-hidden="true">·</span>
+<span>v1.0.5</span>
+</div>
+<h1>From the ticket to the evidence, <em>without leaving VS Code.</em></h1>
+<p class="lead">FlowQA is an end-to-end quality framework for GitHub Copilot Chat. A guided journey takes a user story through analysis, test design, automation in your own framework and execution, then publishes evidence and results back to Jira or Azure DevOps.</p>
+<div class="hero-actions">
+<a class="btn btn-gold" href="#access">Request early access</a>
+<a class="btn btn-ghost" href="#how">See how it works</a>
+</div>
+</div>
+<div class="terminal" aria-label="FlowQA in Copilot Chat">
+<div class="terminal-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="terminal-body">
+<span class="line"><span class="p">@flowqa_</span> /setup_project</span>
+<span class="line dim">Integration ........ Jira + Zephyr Scale</span>
+<span class="line dim">Platform ........... Web</span>
+<span class="line dim">Framework .......... Playwright (TypeScript)</span>
+<span class="line dim">Mode ............... Existing structure</span>
+<span class="line ok">✓ 195 files scaffolded, nothing overwritten</span>
+<span class="line ok">✓ Dependencies installed · MCP auto-start</span>
+<span class="line"><span class="p">@flowqa_</span> /journey<span class="caret" aria-hidden="true"></span></span>
+</div>
+</div>
+</div>
+<div class="facts" role="list">
+<div class="fact" role="listitem"><b>12</b><span>guided journeys, from quick exploratory to full automation</span></div>
+<div class="fact" role="listitem"><b>5</b><span>test-management integrations: Zephyr Scale, Zephyr Essentials, AIO Test, Xray, Azure Test Plans</span></div>
+<div class="fact" role="listitem"><b>4</b><span>platforms: Web, Mobile, API, Desktop</span></div>
+<div class="fact" role="listitem"><b>9</b><span>framework and language combinations, Playwright to Robot Framework</span></div>
+</div>
+</div>
+</section>
+<section id="problem">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">The problem</span>
+<h2>Four tools, one thread that keeps breaking</h2>
+</div>
+<div class="cards">
+<article class="card">
+<h3>Context is lost at every handoff</h3>
+<p>The requirement lives in Jira, the test case in Zephyr or Xray, the automation in a repository and the evidence in a shared folder. Each step starts by reconstructing the previous one.</p>
+</article>
+<article class="card">
+<h3>Coverage depends on who picked up the ticket</h3>
+<p>Every engineer turns a story into tests their own way. Two people, two different scenario sets, and no shared standard for what "covered" means.</p>
+</article>
+<article class="card">
+<h3>Publishing results is the step nobody has time for</h3>
+<p>Evidence is attached late or not at all, and the dashboards leadership looks at lag behind what the team already knows.</p>
+</article>
+</div>
+<p class="so-what"><b>FlowQA keeps the whole thread in the editor</b>, where the code already is: the story comes in from your test-management tool, the journey carries it through, and the results go back out.</p>
+</div>
+</section>
+<section id="how">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">How it works</span>
+<h2>One flow, four stages</h2>
+<p class="lead">Everything happens through <code>@flowqa_</code> in Copilot Chat. The pipeline below is what a journey walks through.</p>
+</div>
+<div class="flow">
+<div class="stage">
+<div class="dot" aria-hidden="true">1</div>
+<h3>Connect</h3>
+<p>Point FlowQA at your test management. It detects the tool and reads the test plan.</p>
+<div class="tags"><span class="tag">Jira + Zephyr Scale</span><span class="tag">Zephyr Essentials</span><span class="tag">AIO Test</span><span class="tag">Xray</span><span class="tag">Azure Test Plans</span></div>
+</div>
+<div class="stage">
+<div class="dot" aria-hidden="true">2</div>
+<h3>Run a journey</h3>
+<p>Pick a workflow with <code>/journey</code>. FlowQA analyzes the story, proposes scenarios, writes the automation in your framework and executes it.</p>
+<div class="tags"><span class="tag">Playwright</span><span class="tag">Cypress</span><span class="tag">Selenium</span><span class="tag">Robot Framework</span></div>
+</div>
+<div class="stage">
+<div class="dot" aria-hidden="true">3</div>
+<h3>Gate</h3>
+<p>A Quality Gate engine with CI/CD templates turns results into a go/no-go on the pipeline.</p>
+<div class="tags"><span class="tag">GitHub Actions</span><span class="tag">Azure DevOps</span><span class="tag">GitLab CI</span></div>
+</div>
+<div class="stage">
+<div class="dot" aria-hidden="true">4</div>
+<h3>Publish</h3>
+<p>Evidence and results return to Jira or Azure DevOps. A metrics dashboard tracks coverage and trends across teams.</p>
+<div class="tags"><span class="tag">Jira</span><span class="tag">Azure DevOps</span><span class="tag">Dashboard</span></div>
+</div>
+</div>
+</div>
+</section>
+<section id="setup">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">Setup</span>
+<h2>One command, ten questions, a working project</h2>
+<p class="lead"><code>@flowqa_ /setup_project</code> runs a wizard that fits FlowQA to the team instead of the other way round. It can integrate an existing test structure or scaffold a new one.</p>
+</div>
+<div class="split">
+<div>
+<ol class="steps">
+<li><div><b>Existing structure or from scratch</b><span>Point it at your current tests and page objects; nothing is overwritten.</span></div></li>
+<li><div><b>Client, project and squad</b><span>Names that follow the results all the way to the dashboard.</span></div></li>
+<li><div><b>Integration</b><span>Jira with Zephyr Scale, Zephyr Essentials, AIO Test or Xray; Azure DevOps with Test Plans.</span></div></li>
+<li><div><b>Platform</b><span>Web, Mobile, API or Desktop.</span></div></li>
+<li><div><b>Framework and language</b><span>Playwright (TypeScript, JavaScript, Python), Cypress (TypeScript, JavaScript), Selenium (Python, Java, C#), Robot Framework.</span></div></li>
+<li><div><b>BDD, data formats and Code mode</b><span>Gherkin on or off, how test data is stored, and whether Code QA runs isolated.</span></div></li>
+</ol>
+<ul class="outcomes">
+<li><span>Project scaffolded in place (195 files in the run shown here), existing automation preserved</span></li>
+<li><span>Dependencies installed, <code>.gitignore</code> updated</span></li>
+<li><span>MCP servers start automatically with the project; Playwright MCP is optional via <code>/configure_mcp_playwright</code></span></li>
+</ul>
+</div>
+<div class="shots">
+<figure>
+<div class="vsc" role="img" aria-label="Wizard step 5 of 10, Integration: Jira + Zephyr Scale selected; Jira + Zephyr Essentials, Jira + AIO Test, Jira + Xray, Azure + Test Plan, None, Other">
+<div class="qp-title">🔗 Integration (5/10)</div>
+<div class="qp-input">Which integration would you like to use?</div>
+<div class="qp-list">
+<div class="qp-item sel">Jira + Zephyr Scale</div><div class="qp-item">Jira + Zephyr Essentials</div><div class="qp-item">Jira + AIO Test</div><div class="qp-item">Jira + Xray</div><div class="qp-item">Azure + Test Plan</div><div class="qp-item">None</div><div class="qp-item">Other</div>
+</div>
+</div>
+<figcaption>Step 5 · integration</figcaption>
+</figure>
+<figure>
+<div class="vsc" role="img" aria-label="Wizard step 6 of 10, Platform: Web selected; Mobile, API, Desktop">
+<div class="qp-title">💻 Platform (6/10)</div>
+<div class="qp-input">Which platform would you like to test?</div>
+<div class="qp-list"><div class="qp-item sel">Web</div><div class="qp-item">Mobile</div><div class="qp-item">API</div><div class="qp-item">Desktop</div></div>
+</div>
+<figcaption>Step 6 · platform</figcaption>
+</figure>
+<figure>
+<div class="vsc" role="img" aria-label="Wizard step: select the framework and language used in the project. Playwright TypeScript selected; Playwright JavaScript, Playwright Python, Cypress TypeScript, Cypress JavaScript, Selenium Python, Selenium Java, Selenium C#, Robot Framework Python, Other">
+<div class="qp-title">Select the framework and language used in the project</div>
+<div class="qp-input">&nbsp;</div>
+<div class="qp-list">
+<div class="qp-item sel">Playwright (TypeScript)</div><div class="qp-item">Playwright (JavaScript)</div><div class="qp-item">Playwright (Python)</div><div class="qp-item">Cypress (TypeScript)</div><div class="qp-item">Cypress (JavaScript)</div><div class="qp-item">Selenium (Python)</div><div class="qp-item">Selenium (Java)</div><div class="qp-item">Selenium (C#)</div><div class="qp-item">Robot Framework (Python)</div><div class="qp-item">Other</div>
+</div>
+</div>
+<figcaption>Framework and language</figcaption>
+</figure>
+<figure>
+<div class="vsc chat" role="img" aria-label="Copilot Chat after setup: existing automation structure preserved, npm install completed, dependencies installed, FlowQA configured, MCP auto-start enabled, optional Playwright MCP, FlowQA ready to use; then @flowqa_ /journey detects Jira">
+<p>ℹ️ <b>Existing automation structure preserved.</b></p>
+<p>📦 <b>Starting npm install in the flowqa folder…</b></p>
+<p>added 10 packages, and audited 11 packages in 1m</p>
+<p><code>1 package is looking for funding &nbsp; run &#96;npm fund&#96; for details</code><br>found 0 vulnerabilities</p>
+<p>✅ <b>Dependencies installed successfully.</b></p>
+<p>🎉 <b>FlowQA configured successfully!</b></p>
+<p>🎙️ <b>MCP auto-start enabled.</b> MCP servers will start automatically.</p>
+<hr>
+<h4>🔑 Playwright MCP (optional)</h4>
+<p>Do you want to configure the Playwright MCP token now?</p>
+<p>ℹ️ All set! You can configure MCP at any time with:</p>
+<p><code>@flowqa_ /configure_mcp_playwright</code></p>
+<p>✅ <b>FlowQA ready to use!</b></p>
+<div class="bubble"><span><span class="tok">@flowqa_</span> <span class="tok">/journey</span></span></div>
+<div class="who"><i>✈</i> FlowQA</div>
+<div class="tool">Tool detected: 🔵 <b>Jira</b></div>
+<div class="ev">Evaluating</div>
+</div>
+<figcaption>Setup complete, journey started · UI available in English and Portuguese</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="journeys">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">Guided journeys</span>
+<h2>Twelve ways to run a day of QA</h2>
+<p class="lead">A journey is a scripted sequence of steps that FlowQA walks the engineer through, pulling context from the ticket at each one. The team runs the same flow whoever picks up the story.</p>
+</div>
+<div class="split journeys-split">
+<div class="journeys" role="list">
+<article class="journey" role="listitem"><div class="top"><b>Full Automation Cycle</b><span class="n">19 steps</span></div><p>Automate a user story from zero to delivery (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Sprint QA (Manual Testing)</b><span class="n">9 steps</span></div><p>Test a story manually, with evidence attached (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Automate from Existing TCs</b><span class="n">4 steps</span></div><p>Turn existing test cases into automation (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>False Negative / Bug Refactoring</b><span class="n">2 steps</span></div><p>Fix a test that reports a false negative.</p></article>
+<article class="journey" role="listitem"><div class="top"><b>API Quality Assurance</b><span class="n">9 steps</span></div><p>Functional, exploratory and security testing of an API (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Regression Execution &amp; Monitoring</b><span class="n">5 steps</span></div><p>Run the full regression suite and watch it.</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Test Plan &amp; Evidence Management</b><span class="n">6 steps</span></div><p>Organize the test plan and its evidence (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Quick Exploratory</b><span class="n">3 steps</span></div><p>A fast pass with no formal analysis (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>Figma Design QA</b><span class="n">12 steps</span></div><p>Design understanding → visual QA → functional QA → regression (Jira).</p></article>
+<article class="journey" role="listitem"><div class="top"><b>LLM Quality Assurance</b><span class="n">7 steps</span></div><p>Quality checks for features built on LLMs.</p></article>
+<article class="journey more" role="listitem"><div class="top"><b>And two more</b><span class="n">v1.0</span></div><p>Twelve journeys ship in the current release; the picker lists them all.</p></article>
+</div>
+<figure>
+<div class="vsc journey-pick" role="img" aria-label="Journey picker listing Full Automation Cycle (selected), Sprint QA, Automate from Existing TCs, False Negative / Bug Refactoring, API Quality Assurance, Regression Execution and Monitoring, Test Plan and Evidence Management, Quick Exploratory, Figma Design QA and LLM Quality Assurance, each with its step count">
+<div class="qp-title">📖 Select a Work Journey</div>
+<div class="qp-input">What do you need to do today?</div>
+<div class="qp-list">
+<div class="qp-item sel"><div>🚀 Full Automation Cycle<span class="n">19 steps</span></div><div class="d">Automate a user story from zero to delivery (Jira)</div></div>
+<div class="qp-item"><div>🏃 Sprint QA (Manual Testing)<span class="n">9 steps</span></div><div class="d">Test a story manually, with evidence (Jira)</div></div>
+<div class="qp-item"><div>🔧 Automate from Existing TCs<span class="n">4 steps</span></div><div class="d">Turn existing test cases into automation (Jira)</div></div>
+<div class="qp-item"><div>🐛 False Negative / Bug Refactoring<span class="n">2 steps</span></div><div class="d">Fix a test with a false negative</div></div>
+<div class="qp-item"><div>🌐 API Quality Assurance<span class="n">9 steps</span></div><div class="d">Test an API: functional, exploratory and security (Jira)</div></div>
+<div class="qp-item"><div>📊 Regression Execution &amp; Monitoring<span class="n">5 steps</span></div><div class="d">Run the full regression suite</div></div>
+<div class="qp-item"><div>📋 Test Plan &amp; Evidence Management<span class="n">6 steps</span></div><div class="d">Organize the test plan (Jira)</div></div>
+<div class="qp-item"><div>⚡ Quick Exploratory<span class="n">3 steps</span></div><div class="d">Quick test, no formal analysis (Jira)</div></div>
+<div class="qp-item"><div>🎨 Figma Design QA<span class="n">12 steps</span></div><div class="d">Design Understanding → Visual QA → Functional QA → Regression (Jira)</div></div>
+<div class="qp-item"><div>🤖 LLM Quality Assurance<span class="n">7 steps</span></div><div class="d">Quality checks for LLM-powered features</div></div>
+</div>
+</div>
+<figcaption><code>@flowqa_ /journey</code> · the picker, with step counts</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="architecture">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">Architecture</span>
+<h2>Built as a platform, delivered as an extension</h2>
+</div>
+<div class="arch">
+<article class="card">
+<span class="eyebrow">In the editor</span>
+<h3>Two chat participants</h3>
+<p><code>@flowqa_</code> runs the full QA flow. <code>@flowqa_code_</code> is the Code QA mode, with TEA enabled, for work that stays close to the code.</p>
+</article>
+<article class="card">
+<span class="eyebrow">Model</span>
+<h3>LLM-agnostic by design</h3>
+<p>FlowQA orchestrates the journey, the prompts and the integrations. The model is whichever one your Copilot runs, so a model change is not a product change.</p>
+</article>
+<article class="card">
+<span class="eyebrow">Tooling</span>
+<h3>MCP servers, started for you</h3>
+<p>MCP servers start automatically with the project. Playwright MCP is optional and configured with one command.</p>
+</article>
+<article class="card">
+<span class="eyebrow">Backend</span>
+<h3>Azure Functions API, multi-tenant</h3>
+<p>A multi-tenant platform with per-team licensing sits behind the extension; the status bar shows the license state.</p>
+</article>
+<article class="card">
+<span class="eyebrow">Visibility</span>
+<h3>Metrics dashboard</h3>
+<p>A Next.js dashboard reads the published results: coverage, execution and trends by client, project and squad.</p>
+</article>
+<article class="card">
+<span class="eyebrow">Pipeline</span>
+<h3>Quality Gate engine</h3>
+<p>CI/CD templates turn test results into gates, so a red build means a real regression and nothing else.</p>
+</article>
+</div>
+<div class="req"><span class="eyebrow">Requirements</span><span class="tag">VS Code 1.90+</span><span class="tag">GitHub Copilot, authenticated</span><span class="tag">Node.js 18+</span></div>
+</div>
+</section>
+<section id="field">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">In the field</span>
+<h2>What one sprint looked like</h2>
+</div>
+<div class="field">
+<div>
+<div class="big">86</div>
+<p class="lead">test scenarios extracted from a single Jira test plan in one sprint, grouped by module (login, sign-up, checkout and others) into ready-to-run automation prompts.</p>
+</div>
+<p class="quote">The team spent the sprint deciding what to automate, not retyping what the test plan already said. Client project under TMPS, 2026.</p>
+</div>
+</div>
+</section>
+<section id="access" class="access">
+<div class="wrap">
+<div class="form-grid">
+<div class="section-head">
+<span class="eyebrow">Early access</span>
+<h2>Bring FlowQA to your team</h2>
+<p class="lead">FlowQA runs today for client teams under TMPS. The multi-tenant platform is live and licensing for external teams is being prepared. Leave your details and you are first in line, with onboarding by the creator.</p>
+<p class="note">No download link here on purpose: the extension is distributed to licensed teams, and a button that leads nowhere would be worse than none.</p>
+</div>
+<form id="access-form" novalidate>
+<div class="row">
+<label for="f-name">Name<input id="f-name" name="name" type="text" autocomplete="name" required></label>
+<label for="f-email">Work email<input id="f-email" name="email" type="email" autocomplete="email" required></label>
+</div>
+<div class="row">
+<label for="f-company">Company<input id="f-company" name="company" type="text" autocomplete="organization"></label>
+<label for="f-size">QA team size
+<select id="f-size" name="team_size">
+<option value="">Select</option>
+<option>1–3</option><option>4–10</option><option>11–30</option><option>30+</option>
+</select>
+</label>
+</div>
+<label for="f-tool">Test management today
+<select id="f-tool" name="tool">
+<option value="">Select</option>
+<option>Jira + Zephyr Scale</option><option>Jira + Zephyr Essentials</option><option>Jira + AIO Test</option><option>Jira + Xray</option><option>Azure DevOps Test Plans</option><option>None yet</option><option>Other</option>
+</select>
+</label>
+<label for="f-msg">What would you run first?<textarea id="f-msg" name="message" placeholder="A journey you want to try, a stack, a deadline"></textarea></label>
+<div class="form-foot">
+<button class="btn btn-gold" type="submit" id="f-submit">Request early access</button>
+<span class="note">Replies come from Abraão Vilela, usually within two business days.</span>
+</div>
+<div id="f-status" class="status" hidden></div>
+</form>
+</div>
+</div>
+</section>
+<section id="creator">
+<div class="wrap">
+<div class="section-head">
+<span class="eyebrow">Built by</span>
+<h2>One engineer, nine years of financial-systems QA</h2>
+</div>
+<div class="creator">
+<div class="avatar" aria-hidden="true">AV</div>
+<div>
+<p><b>Abraão Vilela</b> is a Senior SDET with 9+ years in test automation for high-stakes financial systems, including B3 (Brazil's stock exchange), Itaú Unibanco and PicPay. He has taken four teams from manual testing to an automated pipeline; FlowQA is that playbook turned into a product.</p>
+<div class="links">
+<a href="https://www.linkedin.com/in/abraaovilela" target="_blank" rel="noopener">LinkedIn</a>
+<a href="https://github.com/avilelaqa" target="_blank" rel="noopener">GitHub</a>
+<span class="copyline"><code id="email-text">abraaovilelaqa@gmail.com</code><button class="copybtn" type="button" data-copy="abraaovilelaqa@gmail.com">Copy</button></span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer>
+<div class="wrap">
+<span><span class="wordmark" style="font-size:1rem">FLOWQA</span> <span class="by">by TMPS</span></span>
+<span>TMPS Soluções em Tecnologia · São Paulo, Brazil · © 2026</span>
+</div>
+</footer>
+<script>
+const FORM_ENDPOINT = "";
+const CONTACT = "abraaovilelaqa@gmail.com";
+const form = document.getElementById("access-form");
+const status = document.getElementById("f-status");
+const submitBtn = document.getElementById("f-submit");
+function show(kind, html) {
+status.dataset.kind = kind;
+status.innerHTML = html;
+status.hidden = false;
+status.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+function compose(data) {
+return [
+"FlowQA early access request",
+"",
+"Name: " + data.name,
+"Email: " + data.email,
+"Company: " + (data.company || "-"),
+"QA team size: " + (data.team_size || "-"),
+"Test management: " + (data.tool || "-"),
+"",
+data.message || ""
+].join("\n").trim();
+}
+async function copyText(text, btn) {
+try {
+await navigator.clipboard.writeText(text);
+const old = btn.textContent; btn.textContent = "Copied"; setTimeout(() => (btn.textContent = old), 1600);
+} catch (e) {
+const range = document.createRange();
+const target = btn.previousElementSibling || btn.parentElement;
+range.selectNodeContents(target);
+const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+}
+}
+document.addEventListener("click", (e) => {
+const b = e.target.closest("[data-copy]");
+if (b) copyText(b.dataset.copy, b);
+});
+form.addEventListener("submit", async (e) => {
+e.preventDefault();
+const data = Object.fromEntries(new FormData(form).entries());
+if (!data.name || !data.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+show("err", "<b>Name and a valid work email are required.</b> Everything else is optional.");
+return;
+}
+const text = compose(data);
+if (FORM_ENDPOINT) {
+submitBtn.disabled = true; submitBtn.textContent = "Sending…";
+try {
+const res = await fetch(FORM_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ ...data, _subject: "FlowQA early access: " + data.name }) });
+if (!res.ok) throw new Error("HTTP " + res.status);
+show("ok", "<b>Request received.</b> You will hear back at <code>" + data.email.replace(/</g, "&lt;") + "</code>.");
+form.reset();
+} catch (err) {
+show("err", "<b>Sending failed.</b> Copy the request below and email it to <code>" + CONTACT + "</code>.<pre>" + text.replace(/</g, "&lt;") + "</pre><span class=\"copyline\"><button class=\"copybtn\" type=\"button\" data-copy=\"" + text.replace(/"/g, "&quot;") + "\">Copy request</button></span>");
+} finally {
+submitBtn.disabled = false; submitBtn.textContent = "Request early access";
+}
+return;
+}
+const mailto = "mailto:" + CONTACT + "?subject=" + encodeURIComponent("FlowQA early access: " + data.name) + "&body=" + encodeURIComponent(text);
+show("ok", "<b>Almost there.</b> Your email app should open with the request below. If it does not, copy it and send it to <span class=\"copyline\"><code>" + CONTACT + "</code><button class=\"copybtn\" type=\"button\" data-copy=\"" + CONTACT + "\">Copy address</button></span><pre>" + text.replace(/</g, "&lt;") + "</pre><span class=\"copyline\"><button class=\"copybtn\" type=\"button\" data-copy=\"" + text.replace(/"/g, "&quot;") + "\">Copy request</button></span>");
+try { window.location.href = mailto; } catch (err) { /* the copy path above covers it */ }
+});
+</script>
+</body>
+</html>
